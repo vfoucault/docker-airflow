@@ -6,6 +6,9 @@ TRY_LOOP="20"
 : "${REDIS_PORT:="6379"}"
 : "${REDIS_PASSWORD:=""}"
 
+: "${DASK_SCHEDULER:="dask-scheduler"}"
+: "${DASK_PORT:="8786"}"
+
 : "${POSTGRES_HOST:="postgres"}"
 : "${POSTGRES_PORT:="5432"}"
 : "${POSTGRES_USER:="airflow"}"
@@ -86,6 +89,21 @@ case "$1" in
     # To give the webserver time to run initdb.
     sleep 10
     exec airflow "$@"
+    ;;
+  dask-scheduler)
+    wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
+    wait_for_redis
+    # To give the webserver time to run initdb.
+    sleep 10
+    exec dask-scheduler --host $DASK_SCHEDULER --port $DASK_PORT
+    ;;
+  dask)
+    wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
+    wait_for_redis
+    wait_for_port "Dask scheduler" "$DASK_SCHEDULER" "$DASK_PORT"
+    # To give the webserver time to run initdb.
+    sleep 10
+    exec dask-worker dask-scheduler:8786
     ;;
   flower)
     wait_for_redis
