@@ -3,9 +3,11 @@ Code that goes along with the Airflow tutorial located at:
 https://github.com/airbnb/airflow/blob/master/airflow/example_dags/tutorial.py
 """
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
+from random import choice
 
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator, PythonOperator
 
 default_args = {
     'owner': 'airflow',
@@ -22,33 +24,55 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG('tutorial', default_args=default_args)
+dag = DAG('branching', default_args=default_args)
 
-# t1, t2 and t3 are examples of tasks created by instantiating operators
-t1 = BashOperator(
-    task_id='print_date',
-    bash_command='date',
-    dag=dag)
 
-t2 = BashOperator(
-    task_id='sleep',
-    bash_command='sleep 5',
-    retries=3,
-    dag=dag)
+def random_choice(tasks):
+    """Will pick one entry randomly from tasks list"""
+    return choice(tasks)
 
-templated_command = """
-    {% for i in range(5) %}
-        echo "{{ ds }}"
-        echo "{{ macros.ds_add(ds, 7)}}"
-        echo "{{ params.my_param }}"
-    {% endfor %}
-"""
 
-t3 = BashOperator(
-    task_id='templated',
-    bash_command=templated_command,
-    params={'my_param': 'Parameter I passed in'},
-    dag=dag)
+def task_action(path_name):
+    print("I'm in path {}".format(path_name))
 
-t2.set_upstream(t1)
-t3.set_upstream(t1)
+
+# Here is a list of all the tasks id (name)
+tasks_ids = ['task_a', 'task_b', 'task_c']
+
+# Let's add a BranchOperator that will choose a path
+branch_operator = BranchPythonOperator(task_id='branch_operator',
+                                       dag=dag,
+                                       python_callable=random_choice,
+                                       op_args=[tasks_ids])
+
+
+# Create the last task that will be the downstream of all other tasks
+# Mind the trigger rule
+last_task = DummyOperator(task_id='last_task',
+                          dag=dag,
+                          trigger_rule='all_done')
+
+# Loop over tasks_ids to create all tasks
+for task in tasks_ids:
+    # Create the PythonOperatorTask with the correct params
+    path_task = PythonOperator(task_id=task,
+                               dag=dag,
+                               python_callable=task_action,
+                               op_args=[task])
+
+    # Add the upstream for this task
+    path_task.set_upstream(branch_operator)
+
+    # Create the next task for this path
+    dummy_task = DummyOperator(task_id='dummy_{}'.format(task),
+                               dag=dag)
+
+    # Add the Downstream dummy task
+    path_task.set_downstream(dummy_task)
+
+    # Add the downstream last task for the dummy task
+    dummy_task.set_downstream(last_task)
+
+# Voila !
+
+

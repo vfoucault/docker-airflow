@@ -3,7 +3,6 @@ Code that goes along with the Airflow tutorial located at:
 https://github.com/airbnb/airflow/blob/master/airflow/example_dags/tutorial.py
 """
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from random import choice
@@ -24,11 +23,13 @@ default_args = {
 }
 
 # Create a DAG with xcom DAG is
-dag = DAG('tutorial', default_args=default_args)
+dag = DAG('xcoms', default_args=default_args)
+
 
 def xcom_setter(key, value, **kwargs):
     ti = kwargs['TI']
     ti.xcom_push(key=key, value=value)
+
 
 def xcom_getter(task_id, key, **kwargs):
     ti = kwargs['TI']
