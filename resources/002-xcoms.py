@@ -4,8 +4,9 @@ https://github.com/airbnb/airflow/blob/master/airflow/example_dags/tutorial.py
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
-
+from random import choice
 
 default_args = {
     'owner': 'airflow',
@@ -22,33 +23,36 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
+# Create a DAG with xcom DAG is
 dag = DAG('tutorial', default_args=default_args)
 
-# t1, t2 and t3 are examples of tasks created by instantiating operators
-t1 = BashOperator(
-    task_id='print_date',
-    bash_command='date',
-    dag=dag)
+def xcom_setter(key, value, **kwargs):
+    ti = kwargs['TI']
+    ti.xcom_push(key=key, value=value)
 
-t2 = BashOperator(
-    task_id='sleep',
-    bash_command='sleep 5',
-    retries=3,
-    dag=dag)
+def xcom_getter(task_id, key, **kwargs):
+    ti = kwargs['TI']
+    value = ti.xcom_pull(task_id=task_id, key=key)
+    print("The xcom value is {}".format(value))
+    return value
 
-templated_command = """
-    {% for i in range(5) %}
-        echo "{{ ds }}"
-        echo "{{ macros.ds_add(ds, 7)}}"
-        echo "{{ params.my_param }}"
-    {% endfor %}
-"""
 
-t3 = BashOperator(
-    task_id='templated',
-    bash_command=templated_command,
-    params={'my_param': 'Parameter I passed in'},
-    dag=dag)
+# First task will call xcom_setter
+task1 = PythonOperator(task_id='xcom_setter',
+                             dag=dag,
+                             python_callable=xcom_setter,
+                             provide_context=True,
+                             op_args=['my_key', choice(range(0,10000))])
 
-t2.set_upstream(t1)
-t3.set_upstream(t1)
+# Second task will call xcom_getter
+task2 = PythonOperator(task_id='xcom_getter',
+                       dag=dag,
+                       python_callable=xcom_getter,
+                       provide_context=True,
+                       op_args=['xcom_setter', 'my_key'])
+
+# task1 is upstream for task2
+task2.set_upstream(task1)   
+# or task1 << task2
+# or task2 >> task1
+# or task1.set_downstream(task2)
