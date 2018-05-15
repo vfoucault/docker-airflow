@@ -25,8 +25,8 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-
-dag = DAG('dag_subdags', default_args=default_args)
+# We don't want to oversubscribe workers
+dag = DAG('dag_subdags', default_args=default_args, max_active_runs=1)
 
 # for this one, let's add one first task and one last task
 first_task = DummyOperator(task_id='first_task',
@@ -35,15 +35,17 @@ first_task = DummyOperator(task_id='first_task',
 last_task = DummyOperator(task_id='last_task',
                           dag=dag)
 # For 10 sub elements
-list_sub_elements = range(0, 10)
+list_sub_elements = range(0, 3)
 
 # Let's create a subdag and a subdag_operator:
 for element in list_sub_elements:
     # Add a subdag. It's id should be composed of its parent name
-    subdag = DAG(dag_id='dag_subdags.subelement_{}'.format(element),
+    #
+    subdag = DAG(dag_id='dag_subdags.subdag_for_element_{}'.format(element),
                  default_args=default_args)
 
     # a subdag will be linked to the parent dag via a subdag operator
+    # This task ID should be the same as the subdag id
     subdag_operator = SubDagOperator(dag=dag,
                                      subdag=subdag,
                                      task_id='subdag_for_element_{}'.format(element))
