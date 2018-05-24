@@ -40,38 +40,26 @@ def task_action(path_name):
 tasks_ids = ['task_a', 'task_b', 'task_c']
 
 # Let's add a BranchOperator that will choose a path
-branch_operator = BranchPythonOperator(task_id='branch_operator',
-                                       dag=dag,
-                                       python_callable=random_choice,
-                                       op_args=[tasks_ids])
+branch_operator = BranchPythonOperator(???)
 
 
 # Create the last task that will be the downstream of all other tasks
 # Mind the trigger rule
-last_task = DummyOperator(task_id='last_task',
-                          dag=dag,
-                          trigger_rule='all_done')
+last_task = DummyOperator(???)
 
 # Loop over tasks_ids to create all tasks
 for task in tasks_ids:
     # Create the PythonOperatorTask with the correct params
-    path_task = PythonOperator(task_id=task,
-                               dag=dag,
-                               python_callable=task_action,
-                               op_args=[task])
+    path_task = PythonOperator(???)
 
     # Add the upstream for this task
-    path_task.set_upstream(branch_operator)
 
     # Create the next task for this path
-    dummy_task = DummyOperator(task_id='dummy_{}'.format(task),
-                               dag=dag)
+    dummy_task = DummyOperator(???)
 
     # Add the Downstream dummy task
-    path_task.set_downstream(dummy_task)
 
     # Add the downstream last task for the dummy task
-    dummy_task.set_downstream(last_task)
 
 # Voila !
 

@@ -26,40 +26,30 @@ default_args = {
 }
 
 # We don't want to oversubscribe workers
-dag = DAG('dag_subdags', default_args=default_args, max_active_runs=1)
+dag = DAG(???, max_active_runs=1)
 
 # for this one, let's add one first task and one last task
-first_task = DummyOperator(task_id='first_task',
-                           dag=dag)
+first_task = DummyOperator(???)
 
-last_task = DummyOperator(task_id='last_task',
-                          dag=dag)
-# For 10 sub elements
+last_task = DummyOperator(???)
+# For 3 sub elements, it's enough
 list_sub_elements = range(0, 3)
 
 # Let's create a subdag and a subdag_operator:
 for element in list_sub_elements:
-    # Add a subdag. It's id should be composed of its parent name
+    # Add a subdag. It's id should be composed of its parent name in the form of dag_id.sub_dag_id
     #
-    subdag = DAG(dag_id='dag_subdags.subdag_for_element_{}'.format(element),
-                 default_args=default_args)
+    subdag = DAG(???)
 
     # a subdag will be linked to the parent dag via a subdag operator
     # This task ID should be the same as the subdag id
-    subdag_operator = SubDagOperator(dag=dag,
-                                     subdag=subdag,
-                                     task_id='subdag_for_element_{}'.format(element))
+    subdag_operator = SubDagOperator(???)
 
     # Humm, let's add some tasks for this subdag:
-    task1 = DummyOperator(dag=subdag,
-                          task_id='dummy_task_1')
-    task2 = DummyOperator(dag=subdag,
-                          task_id='dummy_task_2')
+    task1 = DummyOperator(???)
+    task2 = DummyOperator(???)
 
     # Order these tasks
-    task1.set_downstream(task2)
 
     # Mind to set the correct up/down streams tasks for the subdag task
-    subdag_operator.set_upstream(first_task)
-    subdag_operator.set_downstream(last_task)
 

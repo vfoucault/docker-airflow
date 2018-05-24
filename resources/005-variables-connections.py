@@ -41,24 +41,14 @@ def extract_currency(currency, **kwargs):
 
 
 # let's get a variable value
-currency = Variable.get('currency', default_var='EUR')
+currency = Variable.get(???)
 
 # We will use a simple http connection to -> blockchain.info
 # Add a search task to get the btc change rate
-search_task = SimpleHttpOperator(task_id='searcher',
-                                 endpoint='/ticker',
-                                 method='GET',
-                                 xcom_push=True,
-                                 http_conn_id='blockchain',
-                                 dag=dag)
+search_task = SimpleHttpOperator(???)
 
 # Add a display task that will get the xcom data from previous task
 # And call the extract_currency method
-display_task = PythonOperator(task_id='display_rate',
-                              python_callable=extract_currency,
-                              op_args=[currency],
-                              provide_context=True,
-                              dag=dag)
+display_task = PythonOperator(???)
 
 # Order all tasks
-search_task.set_downstream(display_task)

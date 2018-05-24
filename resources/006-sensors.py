@@ -48,19 +48,11 @@ dag = DAG('sensors', default_args=default_args)
 # Let's create the connection. This is normaly done beforehand, but here let's demonstrate that everything is Python
 # The response is a json payload true or false, that can easily be checked with a lamdba
 
-add_http_connection('boolean_api', 'https://fkjxmhikx4.execute-api.eu-west-1.amazonaws.com/')
+add_http_connection(???)
 
-sensor = HttpSensor(task_id='boolean_sensor',
-                    endpoint='stage',
-                    response_check=lambda x: x.json(),
-                    method='GET',
-                    http_conn_id='boolean_api',
-                    dag=dag,
-                    poke_interval=10)
+sensor = HttpSensor(???)
 
 # Create a Dummy Operator for this scenario
-task = DummyOperator(task_id='next_step',
-                     dag=dag)
+task = DummyOperator(???)
 
 # Order all tasks
-sensor.set_downstream(task)

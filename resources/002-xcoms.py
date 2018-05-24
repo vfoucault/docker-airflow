@@ -23,7 +23,7 @@ default_args = {
 }
 
 # Create a DAG with xcom DAG id
-dag = DAG('xcoms', default_args=default_args)
+dag = DAG(???)
 
 
 def xcom_setter(key, value, **kwargs):
@@ -40,21 +40,9 @@ def xcom_getter(task_id, key, **kwargs):
 
 
 # First task will call xcom_setter
-task1 = PythonOperator(task_id='xcom_setter',
-                       dag=dag,
-                       python_callable=xcom_setter,
-                       provide_context=True,
-                       op_args=['my_key', 'super_secret_value_{}'.format(choice(range(0, 10000)))])
+task1 = PythonOperator(???)
 
 # Second task will call xcom_getter
-task2 = PythonOperator(task_id='xcom_getter',
-                       dag=dag,
-                       python_callable=xcom_getter,
-                       provide_context=True,
-                       op_args=['xcom_setter', 'my_key'])
+task2 = PythonOperator(???)
 
 # task1 is upstream for task2
-task2.set_upstream(task1)
-# or task1 << task2
-# or task2 >> task1
-# or task1.set_downstream(task2)
